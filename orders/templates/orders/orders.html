@@ -1,0 +1,36 @@
+{% extends "inventory/base.html" %}
+
+{% block body_block %}
+<div>
+<br>
+<h2>Order History: </h2>
+<br>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Order Number</th>
+      <th scope="col">Total Amount</th>
+      <th scope="col">Order Status</th>
+      <th scope="col">Order Time</th>
+      <th scope="col">Delivery Team</th>
+      <th scope="col">Expected Delivery Time</th>
+    </tr>
+  </thead>
+{% for item in orders %}
+<tbody>
+    <tr>
+      <th scope="row">{{item.order_number}}</th>
+      <th scope="row">{{item.total_price}}</th>
+      <td>{{item.order_status}}</td>
+      <td>{{item.created_time}}</td>
+      <td>{{item.team_name}}</td>
+      <td>{{item.et_delivery}}</td>
+    </tr>
+  </tbody>
+{% endfor %}
+  </table>
+   <a href="{% url 'generate_report' %}">
+      <button type="button" class="btn btn-secondary btn-lg">Generate Report</button>
+    </a>
+  </div>
+{% endblock %}

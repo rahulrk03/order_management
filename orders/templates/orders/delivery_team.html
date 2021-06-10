@@ -1,0 +1,22 @@
+{% extends "inventory/base.html" %}
+
+{% block body_block %}
+<br>
+<h2>Delivery Team List: </h2>
+<br>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Team Name</th>
+      <th scope="col">Availability(True or False)</th>
+    </tr>
+  </thead>
+{% for item in delivery_teams %}
+<tbody>
+    <tr>
+      <th scope="row">{{item.team_name}}</th>
+      <td>{{item.is_available}}</td>
+    </tr>
+  </tbody>
+{% endfor %}
+{% endblock %}

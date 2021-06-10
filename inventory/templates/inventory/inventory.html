@@ -1,0 +1,27 @@
+{% extends "inventory/base.html" %}
+
+{% block body_block %}
+<br>
+<h2>Product List: </h2>
+<br>
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">Product Id</th>
+      <th scope="col">Category</th>
+      <th scope="col">Quantity Available</th>
+      <th scope="col">Price</th>
+    </tr>
+  </thead>
+{% for product in products %}
+<tbody>
+    <tr>
+      <th scope="row">{{product.product_id}}</th>
+      <td>{{product.category}}</td>
+      <td>{{product.quantity}}</td>
+      <td>{{product.price}}</td>
+    </tr>
+  </tbody>
+{% endfor %}
+</table>
+{% endblock %}

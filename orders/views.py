@@ -168,7 +168,7 @@ class GenerateReport(APIView):
         pdf = FPDF('P', 'mm', 'A4')
         pdf.add_page()
         pdf.set_font('courier', 'B', 16)
-        pdf.cell(40, 10, 'This is what you have sold this month so far:', 0, 1)
+        pdf.cell(40, 10, 'Summary for the day ', 0, 1)
         pdf.cell(40, 10, '', 0, 1)
         pdf.set_font('courier', '', 12)
         pdf.cell(10, 8, f"{'Item'.ljust(25) }{'Amount'.ljust(9)} {'Estimated Delivery'.rjust(1)}", 0, 1)

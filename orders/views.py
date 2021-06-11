@@ -6,8 +6,6 @@ from orders.serializers import OrderCreateSerializer, DeliveryTeamSerializer, Ou
 from rest_framework import status
 from orders.models import Order, OrderDetail, DeliveryTeam, DeliveryAssignment
 from inventory.models import Product
-from django.template.loader import get_template
-from django.template import Context
 from fpdf import FPDF
 from django.http import FileResponse
 
@@ -106,6 +104,9 @@ class OrderCreateAPI(APIView):
                     next_available_team = delivery_team.order_by('available_time')
                     team = next_available_team[0]
                     order.et_delivery = team.available_time + timedelta(minutes=delivery_time)
+                    team.available_time = (team.available_time + timedelta(minutes=delivery_time) +
+                                           timedelta(minutes=available_time))
+                    team.save()
                     order.team_name = team.team_name
                     order.order_status = "Pending"
                     order.save()
@@ -130,10 +131,23 @@ class OutforDelivey(APIView):
                 order = Order.objects.get(order_number=serializer.data['order_num'])
                 order_detail = OrderDetail.objects.filter(order_num=order)
                 for item in order_detail:
-                    product = Product.objects.get(product_id=item.product_id)
+                    product = Product.objects.get(product_id=item.product_id.product_id)
                     product.quantity -= item.quantity
                     product.save()
                 order.order_status = "Out For Delivery"
+                delivery_team = DeliveryTeam.objects.get(team_name=order.team_name)
+                delivery_team.is_available = False
+                if float(order.customer_distance) < 5:
+                    delivery_time = 40
+                    available_time = 20
+                else:
+                    delivery_time = 60
+                    available_time = 40
+                datetime_now = datetime.now()
+                expected_delivery_time = datetime_now + timedelta(minutes=delivery_time)
+                expected_available_time = expected_delivery_time + timedelta(minutes=available_time)
+                delivery_team.available_time = expected_available_time
+                delivery_team.save()
                 order.save()
                 return Response({"data": None,
                                  "message": "Success"},

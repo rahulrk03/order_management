@@ -14,3 +14,7 @@ class DeliveryTeamSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = DeliveryTeam
 		fields = ['team_name']
+		
+		
+class OutForDeliverySerializer(serializers.Serializer):
+	order_num = serializers.CharField(required=True)

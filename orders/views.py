@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from orders.serializers import OrderCreateSerializer, DeliveryTeamSerializer
+from orders.serializers import OrderCreateSerializer, DeliveryTeamSerializer, OutForDeliverySerializer
 from rest_framework import status
 from orders.models import Order, OrderDetail, DeliveryTeam, DeliveryAssignment
 from inventory.models import Product
@@ -41,7 +41,7 @@ class OrderCreateAPI(APIView):
                               customer_name=serializer.data['customer_name'],
                               customer_address=serializer.data['customer_address'],
                               customer_distance=serializer.data['customer_distance'],
-                              order_status="Accepted",
+                              order_status="New",
                               total_price=serializer.data['total_price'],
                               created_time=datetime_now)
                 order_item_list = []
@@ -51,8 +51,6 @@ class OrderCreateAPI(APIView):
                         order_item = OrderDetail(order_num=order,
                                                  product_id=product,
                                                  quantity=item['quantity'])
-                        product.quantity -= item['quantity']
-                        product.save()
                         order_item_list.append(order_item)
                     else:
                         response_data = {
@@ -82,6 +80,7 @@ class OrderCreateAPI(APIView):
                     team.save()
                     order.et_delivery = expected_delivery_time
                     order.team_name = team.team_name
+                    order.order_status = "Accepted"
                     order.save()
                     OrderDetail.objects.bulk_create(order_item_list)
                     delivery_assignment.save()
@@ -99,6 +98,7 @@ class OrderCreateAPI(APIView):
                     team.save()
                     order.et_delivery = expected_delivery_time
                     order.team_name = team.team_name
+                    order.order_status = "Accepted"
                     order.save()
                     OrderDetail.objects.bulk_create(order_item_list)
                     delivery_assignment.save()
@@ -107,6 +107,7 @@ class OrderCreateAPI(APIView):
                     team = next_available_team[0]
                     order.et_delivery = team.available_time + timedelta(minutes=delivery_time)
                     order.team_name = team.team_name
+                    order.order_status = "Pending"
                     order.save()
                     OrderDetail.objects.bulk_create(order_item_list)
                 return Response({"data": None,
@@ -119,7 +120,31 @@ class OrderCreateAPI(APIView):
             return Response({"data": str(e),
                              "message": "Something went wrong"},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+
+
+class OutforDelivey(APIView):
+    def patch(self, request):
+        try:
+            serializer = OutForDeliverySerializer(data=request.data)
+            if serializer.is_valid():
+                order = Order.objects.get(order_number=serializer.data['order_num'])
+                order_detail = OrderDetail.objects.filter(order_num=order)
+                for item in order_detail:
+                    product = Product.objects.get(product_id=item.product_id)
+                    product.quantity -= item.quantity
+                    product.save()
+                order.order_status = "Out For Delivery"
+                order.save()
+                return Response({"data": None,
+                                 "message": "Success"},
+                                status=status.HTTP_200_OK)
+            return Response({"data": serializer.errors,
+                             "message": "Input error"},
+                            status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"data": str(e),
+                             "message": "Something went wrong"},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class OrderHistory(APIView):
     def get(self, request):
@@ -177,5 +202,3 @@ class GenerateReport(APIView):
             pdf.cell(10, 8, f"{item.order_number.ljust(24)} {item.total_price}  {deliver_time}", 0, 1)
         pdf.output('report.pdf', 'F')
         return FileResponse(open('report.pdf', 'rb'), as_attachment=False, content_type='application/pdf')
-
-    

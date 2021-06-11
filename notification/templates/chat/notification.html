@@ -1,0 +1,15 @@
+{% extends "inventory/base.html" %}
+
+{% block body_block %}
+<br>
+<h2>Notifications: </h2>
+<br>
+<table class="table">
+{% for item in notifications %}
+<tbody>
+    <tr>
+      <th scope="row">{{item.message}}</th>
+    </tr>
+  </tbody>
+{% endfor %}
+{% endblock %}
